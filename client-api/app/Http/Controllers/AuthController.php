@@ -95,7 +95,7 @@ class AuthController extends Controller
             }
 
             Session::put('user', $data);
-            Session::put('token', $data['accessToken']); // Cambiar token por accessToken
+            Session::put('token', $data['accessToken']);
 
             return redirect()
                 ->route('users.index')

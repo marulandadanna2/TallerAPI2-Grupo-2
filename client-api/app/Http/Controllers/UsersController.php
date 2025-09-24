@@ -3,146 +3,88 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Session;
 
 class UsersController extends Controller
 {
+    protected $baseUrl;
 
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct()
+    {
+        $this->baseUrl = env('URL_BASE_API', "https://dummyjson.com");
+    }
+
     public function index()
     {
-        $url = env('URL_BASE_API',"https://dummyjson.com");
-        $response = Http::acceptJson()->withToken(Session::get('token'))->get($url . '/users');
-        if($response->successful())
-        {
-            $users = $response->json()['users'];
+        $response = Http::get($this->baseUrl . '/users');
+
+        if ($response->successful()) {
+            $users = $response->json()['users'] ?? [];
             return view('users.index', compact('users'));
         }
-    }   
 
-    /**
-     * Show the form for creating a new resource.
-     */
+        return back()->withErrors(['error' => 'No se pudieron cargar los usuarios']);
+    }
+
     public function create()
     {
-        return view('users.create');
+        return view('users.form');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $url = env('URL_BASE_API', "https://dummyjson.com");
-        $response = Http::acceptJson()->withToken(Session::get('token'))->post($url . '/users/add', [
-            'firstName' => $request->first_name,
-            'lastName' => $request->last_name,
-            'email' => $request->email,
-            'password' => $request->password,
-            'age' => $request->age,
-            'gender' => $request->gender,
-            'phone' => $request->phone,
-            'username' => $request->username 
+        $response = Http::post($this->baseUrl . '/users/add', [
+            'firstName' => $request->firstName,
+            'lastName'  => $request->lastName,
+            'email'     => $request->email,
+            'password'  => $request->password,
+            'age'       => $request->age,
+            'gender'    => $request->gender,
+            'phone'     => $request->phone,
+            'username'  => $request->username,
         ]);
 
-        if($response->successful())
-            {
-                session()->flash('message', 'Usuarios creado exitosamente');
-                return redirect()->route('users.index');
-            }
-        elseif($response->status() == Response::HTTP_BAD_REQUEST)
-        {
-            $errors = $response->json()['errors'];
-            return redirect()->route('users.create')->withInput()->withErrors($errors);
-        }
-        else
-        {
-            abort($response->status());
-        }
+        return $response->successful()
+            ? redirect()->route('users.index')->with('message', 'Usuario creado exitosamente')
+            : back()->withErrors(['error' => $response->json()['message'] ?? 'Error al crear usuario']);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        $url = env('URL_BASE_API', "https://dummyjson.com");
-        $response = Http::acceptJson()->withToken(Session::get('token'))->get($url . '/users/' . $id);
+        $response = Http::get($this->baseUrl . '/users/' . $id);
 
-        if($response->successful())
-        {
+        if ($response->successful()) {
             $user = $response->json();
-            return view('users.edit', compact('user'));
+            return view('users.form', compact('user'));
         }
-        elseif($response->status() == Response::HTTP_BAD_REQUEST)
-        {
-            $errors = $response->json()['errors'];
-            return redirect()->route('users.index')->withInput()->withErrors($errors);
-        }
-        else
-        {
-            abort($response->status());
-        }
+
+        return redirect()->route('users.index')->withErrors(['error' => 'Usuario no encontrado']);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        $url = env('URL_BASE_API', "https://dummyjson.com");
-        $response = Http::acceptJson()->withToken(Session::get('token'))->put($url . '/users/' . $id, [
-            'firstName' => $request->first_name,
-            'lastName' => $request->last_name,
-            'email' => $request->email,
-            'password' => $request->password,
-            'age' => $request->age,
-            'gender' => $request->gender,
-            'phone' => $request->phone,
-            'username' => $request->username 
+        $response = Http::put($this->baseUrl . '/users/' . $id, [
+            'firstName' => $request->firstName,
+            'lastName'  => $request->lastName,
+            'email'     => $request->email,
+            'password'  => $request->password,
+            'age'       => $request->age,
+            'gender'    => $request->gender,
+            'phone'     => $request->phone,
+            'username'  => $request->username,
         ]);
 
-        if($response->successful())
-            {
-                session()->flash('message', 'Usuarios actualizado exitosamente');
-                return redirect()->route('users.index');
-            }
-        elseif($response->status() == Response::HTTP_BAD_REQUEST)
-        {
-            $errors = $response->json()['errors'];
-            return redirect()->route('users.create')->withInput()->withErrors($errors);
-        }
-        else
-        {
-            abort($response->status());
-        }
+        return $response->successful()
+            ? redirect()->route('users.index')->with('message', 'Usuario actualizado exitosamente')
+            : back()->withErrors(['error' => $response->json()['message'] ?? 'Error al actualizar usuario']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        $url = env('URL_BASE_API', "https://dummyjson.com");
-        $response = Http::acceptJson()->withToken(Session::get('token'))->delete($url . '/users/' . $id);
+        $response = Http::delete($this->baseUrl . '/users/' . $id);
 
-        if($response->successful())
-        {
-            session()->flash('message', 'usuario eliminado exitosamente');
-            return redirect()->route('users.index');
-        }
-        elseif($response->status() == Response::HTTP_BAD_REQUEST)
-        {
-            $errors = $response->json()['errors'];
-            return redirect()->route('users.index')->withInput()->withErrors($errors);
-        }
-        else
-        {
-            abort($response->status());
-        }
+        return $response->successful()
+            ? redirect()->route('users.index')->with('message', 'Usuario eliminado exitosamente')
+            : back()->withErrors(['error' => $response->json()['message'] ?? 'Error al eliminar usuario']);
     }
 }
