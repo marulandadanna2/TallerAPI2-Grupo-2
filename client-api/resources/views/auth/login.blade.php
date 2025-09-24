@@ -5,7 +5,6 @@
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <meta http-equiv="X-UA-Compatible" content="ie=edge">
             <title>Login</title>
-            <!-- Custom fonts for this template-->
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
                 rel="stylesheet" />
@@ -31,14 +30,26 @@
                                                 <form class="user" action="{{ route('auth.login') }}" method="POST">
                                                     @csrf
                                                     <div class="form-group">
-                                                        <input type="email" name="email" id="email" class="form-control form-control-user" placeholder="Correo electrónico" style="border-radius: 8px;" value="{{ old('email') }}">
+                                                        <input type="text" 
+                                                               name="username" 
+                                                               id="username" 
+                                                               class="form-control form-control-user" 
+                                                               placeholder="Nombre de usuario" 
+                                                               style="border-radius: 8px;" 
+                                                               value="{{ old('username') }}">
                                                     </div>
                                                     <br>
                                                     <div class="form-group">
-                                                        <input type="password" name="password" id="password" class="form-control form-control-user" placeholder="Contraseña" style="border-radius: 8px;">
+                                                        <input type="password" 
+                                                               name="password" 
+                                                               id="password" 
+                                                               class="form-control form-control-user" 
+                                                               placeholder="Contraseña" 
+                                                               style="border-radius: 8px;">
                                                     </div>
                                                     <br>
-                                                    <button type="submit" class="btn btn-primary btn-user btn-block" style="border-radius: 15px">Ingresar</button>
+                                                    <button type="submit" class="btn btn-primary btn-user btn-block" 
+                                                            style="border-radius: 15px">Ingresar</button>
                                                 </form>
                                                 <hr>
                                             </div>

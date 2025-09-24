@@ -14,12 +14,10 @@ class AuthController extends Controller
      */
     public function index()
     {
-        if(Session::has('token'))
-        {
-            return redirect()->route('index');
+        if (Session::has('token')) {
+            return redirect()->route('users.index');
         }
-        
-        return view('auth.login');  
+        return view('auth.login');
     }
 
     /**
@@ -76,52 +74,49 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        //ulr = url_base + /endpoint_servicio
-        $url = env('URL_BASE_API', "http://localhost:8000");
-        $response = Http::acceptJson()->post($url . '/auth/login', [
-            'username' => $request->username, //$request['username']
-            'password' => $request->password
-        ]);
+        try {
+            $request->validate([
+                'username' => 'required',
+                'password' => 'required'
+            ]);
 
-        if($response->status() == Response::HTTP_OK)
-        {
-            $jsonResponse = json_decode($response);
-            Session::put('user', $jsonResponse->user);
-            Session::put('token', $jsonResponse->token);
-            return redirect()->route('index');
+            $response = Http::acceptJson()->post(env('URL_BASE_API') . '/auth/login', [
+                'username' => $request->username,
+                'password' => $request->password
+            ]);
+
+            $data = $response->json();
+
+            if (!$response->successful()) {
+                $message = $data['message'] ?? 'Credenciales incorrectas';
+                return back()
+                    ->withInput()
+                    ->withErrors(['error' => $message]);
+            }
+
+            Session::put('user', $data);
+            Session::put('token', $data['accessToken']); // Cambiar token por accessToken
+
+            return redirect()
+                ->route('users.index')
+                ->with('success', 'Bienvenido ' . ($data['firstName'] ?? 'Usuario'));
+
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Error de conexión: ' . $e->getMessage()]);
         }
-        else
-        {
-            return back()->withErrors([
-                'username' => 'Credenciales incorrectas'
-            ])->onlyInput('username'); 
-        }          
     }
 
     /**
      * logout de usuarios
      */
-    public function logout(Request $request)
+    public function logout()
     {
-        if(Session::has('token'))
-        {
-            $token = Session::get('token');
-            $url = env('URL_BASE_API', "http://localhost:8000");
-            $response = Http::acceptJson()->withToken($token)->post($url . '/auth/logout');
-            if($response->status() == Response::HTTP_OK)
-            {
-                Session::flush();
-                $request->session()->invalidate();
-                return redirect()->route('auth.index'); //redirecciona al login
-            }
-        }
-        else
-        {
-            session()->flash('warning', 'No has iniciado una sesión');
-            return view('auth.index');
-        }
-
-        
+        Session::forget(['user', 'token']);
+        return redirect()
+            ->route('auth.index')
+            ->with('success', 'Has cerrado sesión correctamente');
     }
     
 }
