@@ -15,19 +15,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Ruta principal redirige al login
 Route::get('/', function () {
     return redirect()->route('auth.index');
 })->name('index');
 
-// Rutas de autenticación
 Route::prefix('auth')->group(function(){
     Route::get('/index', [AuthController::class, 'index'])->name('auth.index');
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
     Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 });
 
-// Rutas de usuarios protegidas por autenticación
 Route::middleware(['auth.check'])->prefix('users')->group(function(){
     Route::get('/index', [UsersController::class, 'index'])->name('users.index');
     Route::get('/create', [UsersController::class, 'create'])->name('users.create');
